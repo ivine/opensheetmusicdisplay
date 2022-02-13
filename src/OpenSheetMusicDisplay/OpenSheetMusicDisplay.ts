@@ -23,6 +23,8 @@ import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartMa
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 
+import smoothscroll from "smoothscroll-polyfill";
+
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
@@ -43,6 +45,9 @@ export class OpenSheetMusicDisplay {
      */
     constructor(container: string | HTMLElement,
                 options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard()) {
+
+        // safari support scroll smooth
+        smoothscroll.polyfill();
 
         // Store container element
         if (typeof container === "string") {
