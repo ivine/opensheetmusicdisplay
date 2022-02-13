@@ -25,6 +25,9 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
 
 import smoothscroll from "smoothscroll-polyfill";
 
+import { PointF2D } from "../Common";
+import { CustomSingleSelectOptions, GetSingleSelectStandardValue } from "../Custom/SelectOption";
+
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
  * It can display MusicXML sheet music files in an HTML element container.<br>
@@ -73,6 +76,8 @@ export class OpenSheetMusicDisplay {
     public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
         return this.cursors[0];
     }
+    public singleSelectOptions: CustomSingleSelectOptions = GetSingleSelectStandardValue();
+
     public zoom: number = 1.0;
     protected zoomUpdated: boolean = false;
     /** Timeout in milliseconds used in osmd.load(string) when string is a URL. */
@@ -260,6 +265,8 @@ export class OpenSheetMusicDisplay {
         }
         this.zoomUpdated = false;
         //console.log("[OSMD] render finished");
+
+        this.container.onclick = this.onClickContainer.bind(this);
     }
 
     protected createOrRefreshRenderBackend(): void {
@@ -637,6 +644,19 @@ export class OpenSheetMusicDisplay {
         this.rules.ColoringSetCurrent = coloringSetCurrent;
 
         this.rules.ColoringMode = options.coloringMode;
+    }
+
+    onClickContainer(e: PointerEvent): void {
+        if (!this.singleSelectOptions.selectMode) {
+            return;
+        }
+        e.preventDefault();
+
+        const tmp_sheetX: number = (e.pageX - this.container.offsetLeft) / 10;
+        const tmp_sheetY: number = (e.pageY - this.container.offsetTop) / 10;
+        const tmp_sheetLocation: PointF2D = new PointF2D(tmp_sheetX, tmp_sheetY);
+
+        this.graphic.SelectAnSectionStaffEntry(tmp_sheetLocation, this);
     }
 
     /**

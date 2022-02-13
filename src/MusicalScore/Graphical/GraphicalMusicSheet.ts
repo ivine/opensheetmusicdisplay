@@ -26,6 +26,7 @@ import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
+import { OpenSheetMusicDisplay } from "../../OpenSheetMusicDisplay";
 // import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
 // import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
@@ -968,6 +969,36 @@ export class GraphicalMusicSheet {
             }
         }
         return followedInstrumentCount;
+    }
+
+    // 选择一段区间
+    public SelectAnSectionStaffEntry(pos: PointF2D, osmd: OpenSheetMusicDisplay): void {
+        const tmp_StaffEntry: GraphicalStaffEntry = this.GetNearestStaffEntry(pos);
+        const graphicalMesArray: GraphicalMeasure[] = tmp_StaffEntry.parentMeasure.parentSourceMeasure.VerticalMeasureList;
+
+        const selected: boolean = osmd.singleSelectOptions.staffEntry === tmp_StaffEntry;
+
+        for (const node of osmd.singleSelectOptions.selectedNodeArray) {
+            if (node && node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        }
+
+        console.log("osmd.singleSelectOptions.selectedNodeArray --> ", osmd.singleSelectOptions.selectedNodeArray);
+
+        if (selected) {
+            osmd.singleSelectOptions.staffEntry = null;
+        } else {
+            const color: string = selected ? "transparent" : "#32c47c50";
+            const tmpNodes: Node[] = [];
+            for (const tmp_entry of graphicalMesArray) {
+                const boundingbox: BoundingBox = tmp_entry.PositionAndShape;
+                const node: Node = this.drawer.drawBoundingBox(boundingbox, color);
+                tmpNodes.push(node);
+            }
+            osmd.singleSelectOptions.staffEntry = tmp_StaffEntry;
+            osmd.singleSelectOptions.selectedNodeArray = tmpNodes;
+        }
     }
 
     /*public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): GraphicalMeasure[] {
