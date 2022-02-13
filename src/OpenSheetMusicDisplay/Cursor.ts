@@ -47,6 +47,8 @@ export class Cursor {
       this.wantedZIndex = "-2";
       curs.style.zIndex = this.wantedZIndex;
     }
+    curs.style.pointerEvents = openSheetMusicDisplay.singleSelectOptions.selectMode ? "none" : "auto";
+
     this.cursorElement = <HTMLImageElement>curs;
     this.container.appendChild(curs);
   }

@@ -973,19 +973,18 @@ export class GraphicalMusicSheet {
 
     // 选择一段区间
     public SelectAnSectionStaffEntry(pos: PointF2D, osmd: OpenSheetMusicDisplay): void {
-        const tmp_StaffEntry: GraphicalStaffEntry = this.GetNearestStaffEntry(pos);
-        const graphicalMesArray: GraphicalMeasure[] = tmp_StaffEntry.parentMeasure.parentSourceMeasure.VerticalMeasureList;
-
-        const selected: boolean = osmd.singleSelectOptions.staffEntry === tmp_StaffEntry;
-
         for (const node of osmd.singleSelectOptions.selectedNodeArray) {
             if (node && node.parentNode) {
                 node.parentNode.removeChild(node);
             }
         }
 
-        console.log("osmd.singleSelectOptions.selectedNodeArray --> ", osmd.singleSelectOptions.selectedNodeArray);
+        const tmp_StaffEntry: GraphicalStaffEntry = this.GetNearestStaffEntry(pos);
+        const graphicalMesArray: GraphicalMeasure[] = tmp_StaffEntry.parentMeasure.parentSourceMeasure.VerticalMeasureList;
 
+        console.log("tmp_StaffEntry --> ", tmp_StaffEntry);
+
+        const selected: boolean = osmd.singleSelectOptions.staffEntry === tmp_StaffEntry;
         if (selected) {
             osmd.singleSelectOptions.staffEntry = null;
         } else {
