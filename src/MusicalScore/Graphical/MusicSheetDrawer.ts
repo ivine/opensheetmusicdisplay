@@ -46,7 +46,7 @@ export abstract class MusicSheetDrawer {
     public drawingParameters: DrawingParameters;
     public splitScreenLineColor: number;
     public midiPlaybackAvailable: boolean;
-    public drawableBoundingBoxElement: string = process.env.DRAW_BOUNDING_BOX_ELEMENT;
+    public drawableBoundingBoxElement: string = "None"; // process.env.DRAW_BOUNDING_BOX_ELEMENT;
 
     public skyLineVisible: boolean = false;
     public bottomLineVisible: boolean = false;
@@ -346,7 +346,7 @@ export abstract class MusicSheetDrawer {
                 }
             } else {
                 for (const bracket of musicSystem.GroupBrackets) {
-                    (bracket as VexFlowInstrumentBracket).Visible = false; //.setType(Vex.Flow.StaveConnector.type.NONE);
+                    (bracket as VexFlowInstrumentBracket).Visible = false; //.setType(VF.StaveConnector.type.NONE);
                 }
             }
         }

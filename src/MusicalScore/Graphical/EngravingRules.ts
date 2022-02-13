@@ -226,6 +226,11 @@ export class EngravingRules {
     public MinSkyBottomDistBetweenStaves: number;
     public MinimumCrossedBeamDifferenceMargin: number;
 
+    /** Maximum width of sheet / HTMLElement containing the score. Canvas is limited to 32767 in current browsers, though SVG isn't.
+     *  Setting this to > 32767 will break the canvas backend (no problem if you only use SVG).
+     */
+    public SheetMaximumWidth: number;
+
     public VoiceSpacingMultiplierVexflow: number;
     public VoiceSpacingAddendVexflow: number;
     public PickupMeasureWidthMultiplier: number;
@@ -238,6 +243,8 @@ export class EngravingRules {
     public MetronomeMarkXShift: number;
     public MetronomeMarkYShift: number;
     public SoftmaxFactorVexFlow: number;
+    /** Stagger (x-shift) whole notes that are the same note, but in different voices (show 2 instead of 1). */
+    public StaggerSameWholeNotes: boolean;
     public MaxInstructionsConstValue: number;
     public NoteDistances: number[] = [1.0, 1.0, 1.3, 1.6, 2.0, 2.5, 3.0, 4.0];
     public NoteDistancesScalingFactors: number[] = [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0];
@@ -258,6 +265,8 @@ export class EngravingRules {
     public ColorFlags: boolean;
     public ColorBeams: boolean;
     public ColoringSetCurrent: Dictionary<NoteEnum|number, string>;
+    /** Default color for all musical elements including key signature etc. Default undefined. */
+    public DefaultColorMusic: string;
     public DefaultColorNotehead: string;
     public DefaultColorRest: string;
     public DefaultColorStem: string;
@@ -289,6 +298,7 @@ export class EngravingRules {
     public RenderMultipleRestMeasures: boolean;
     public AutoGenerateMutipleRestMeasuresFromRestMeasures: boolean;
     public RenderRehearsalMarks: boolean;
+    public RenderClefsAtBeginningOfStaffline: boolean;
     public RenderKeySignatures: boolean;
     public RenderTimeSignatures: boolean;
     public DynamicExpressionMaxDistance: number;
@@ -563,6 +573,9 @@ export class EngravingRules {
         // Line Widths
         this.MinimumCrossedBeamDifferenceMargin = 0.0001;
 
+        // Canvas is limited to 32767 in most browsers, though SVG isn't.
+        this.SheetMaximumWidth = 32767;
+
         // xSpacing Variables
         this.VoiceSpacingMultiplierVexflow = 0.85;
         this.VoiceSpacingAddendVexflow = 3.0;
@@ -578,6 +591,7 @@ export class EngravingRules {
         this.SoftmaxFactorVexFlow = 15; // only applies to Vexflow 3.x. 15 seems like the sweet spot. Vexflow default is 100.
         // if too high, score gets too big, especially half notes. with half note quarter quarter, the quarters get squeezed.
         // if too low, smaller notes aren't positioned correctly.
+        this.StaggerSameWholeNotes = true;
 
         // Render options (whether to render specific or invisible elements)
         this.AlignRests = AlignRestOption.Never; // 0 = false, 1 = true, 2 = auto
@@ -591,11 +605,7 @@ export class EngravingRules {
         this.ColorStemsLikeNoteheads = false;
         this.ColorBeams = true;
         this.ColorFlags = true;
-        this.DefaultColorNotehead = "#000000"; // black. undefined is only black if a note's color hasn't been changed before.
-        this.DefaultColorRest = this.DefaultColorNotehead;
-        this.DefaultColorStem = this.DefaultColorNotehead;
-        this.DefaultColorLabel = this.DefaultColorNotehead;
-        this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.applyDefaultColorMusic("#000000"); // black. undefined is only black if a note's color hasn't been changed before.
         this.DefaultColorCursor = "#33e02f"; // green
         this.DefaultFontFamily = "Times New Roman"; // what OSMD was initially optimized for
         this.DefaultFontStyle = FontStyles.Regular;
@@ -619,6 +629,7 @@ export class EngravingRules {
         this.RenderMultipleRestMeasures = true;
         this.AutoGenerateMutipleRestMeasuresFromRestMeasures = true;
         this.RenderRehearsalMarks = true;
+        this.RenderClefsAtBeginningOfStaffline = true;
         this.RenderKeySignatures = true;
         this.RenderTimeSignatures = true;
         this.ArticulationPlacementFromXML = true;
@@ -659,6 +670,20 @@ export class EngravingRules {
         } catch (ex) {
             log.info("EngravingRules()", ex);
         }
+    }
+
+    /** Makes it so that all musical elements (including key/time signature)
+     *  are colored with the given color by default,
+     *  unless an element has a different color set (e.g. VoiceEntry.StemColor).
+     */
+    public applyDefaultColorMusic(color: string): void {
+        this.DefaultColorMusic = color;
+        this.DefaultColorNotehead = this.DefaultColorMusic;
+        this.DefaultColorRest = this.DefaultColorNotehead;
+        this.DefaultColorStem = this.DefaultColorNotehead;
+        this.DefaultColorLabel = this.DefaultColorNotehead;
+        this.DefaultColorTitle = this.DefaultColorNotehead;
+        this.LedgerLineColorDefault = this.DefaultColorNotehead;
     }
 
     public addGraphicalNoteToNoteMap(note: Note, graphicalNote: GraphicalNote): void {

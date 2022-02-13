@@ -1,4 +1,5 @@
 import Vex from "vexflow";
+import VF = Vex.Flow;
 import {GraphicalNote} from "../GraphicalNote";
 import {Note} from "../../VoiceData/Note";
 import {ClefInstruction} from "../../VoiceData/Instructions/ClefInstruction";
@@ -32,7 +33,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
     // The pitch of this note as given by VexFlowConverter.pitch
     public vfpitch: [string, string, ClefInstruction];
     // The corresponding VexFlow StaveNote (plus its index in the chord)
-    public vfnote: [Vex.Flow.StemmableNote, number];
+    public vfnote: [VF.StemmableNote, number];
     public vfnoteIndex: number;
     // The current clef
     private clef: ClefInstruction;
@@ -48,7 +49,7 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         //     const acc: string = Pitch.accidentalVexflow(pitch.Accidental);
         //     if (acc) {
         //         alert(acc);
-        //         this.vfnote[0].addAccidental(this.vfnote[1], new Vex.Flow.Accidental(acc));
+        //         this.vfnote[0].addAccidental(this.vfnote[1], new VF.Accidental(acc));
         //     }
         // } else {
         // revert octave shift, as the placement of the note is independent of octave brackets
@@ -76,12 +77,12 @@ export class VexFlowGraphicalNote extends GraphicalNote {
      * @param note
      * @param index
      */
-    public setIndex(note: Vex.Flow.StemmableNote, index: number): void {
+    public setIndex(note: VF.StemmableNote, index: number): void {
         this.vfnote = [note, index];
         this.vfnoteIndex = index;
     }
 
-    public notehead(vfNote: Vex.Flow.StemmableNote = undefined): {line: number} {
+    public notehead(vfNote: VF.StemmableNote = undefined): {line: number} {
         let vfnote: any = vfNote;
         if (!vfnote) {
             vfnote = (this.vfnote[0] as any);
@@ -121,5 +122,25 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             return undefined; // e.g. MultiRestMeasure
         }
         return this.vfnote[0].getAttribute("el");
+    }
+
+    /** Gets the SVG path element of the note's stem. */
+    public getStemSVG(): HTMLElement {
+        return document.getElementById("vf-" + this.getSVGId() + "-stem");
+        // more correct, but Vex.Prefix() is not in the definitions:
+        //return document.getElementById((Vex as any).Prefix(this.getSVGId() + "-stem"));
+    }
+
+    /** Gets the SVG path elements of the beams starting on this note. */
+    public getBeamSVGs(): HTMLElement[] {
+        const beamSVGs: HTMLElement[] = [];
+        for (let i: number = 0;; i++) {
+            const newSVG: HTMLElement = document.getElementById(`vf-${this.getSVGId()}-beam${i}`);
+            if (!newSVG) {
+                break;
+            }
+            beamSVGs.push(newSVG);
+        }
+        return beamSVGs;
     }
 }

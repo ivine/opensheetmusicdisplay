@@ -21,6 +21,7 @@ import { Tuplet } from "../../VoiceData/Tuplet";
 import { VexFlowMeasure } from "./VexFlowMeasure";
 import { VexFlowTextMeasurer } from "./VexFlowTextMeasurer";
 import Vex from "vexflow";
+import VF = Vex.Flow;
 import log from "loglevel";
 import { unitInPixels } from "./VexFlowMusicSheetDrawer";
 import { VexFlowGraphicalNote } from "./VexFlowGraphicalNote";
@@ -145,8 +146,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     measures = visibleMeasures;
 
     // Format the voices
-    const allVoices: Vex.Flow.Voice[] = [];
-    const formatter: Vex.Flow.Formatter = new Vex.Flow.Formatter({
+    const allVoices: VF.Voice[] = [];
+    const formatter: VF.Formatter = new VF.Formatter({
       // maxIterations: 2,
       softmaxFactor: this.rules.SoftmaxFactorVexFlow // this setting is only applied in Vexflow 3.x. also this needs @types/vexflow ^3.0.0
     });
@@ -166,8 +167,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         maxStaffEntries = Math.max(measure.staffEntries.length, maxStaffEntries);
         maxStaffEntriesPlusAccidentals = Math.max(measure.staffEntries.length + measureAccidentals, maxStaffEntriesPlusAccidentals);
       }
-      const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
-      const voices: Vex.Flow.Voice[] = [];
+      const mvoices: { [voiceID: number]: VF.Voice } = (measure as VexFlowMeasure).vfVoices;
+      const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);
@@ -298,8 +299,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       if (!measure) {
         continue;
       }
-      const mvoices: { [voiceID: number]: Vex.Flow.Voice } = (measure as VexFlowMeasure).vfVoices;
-      const voices: Vex.Flow.Voice[] = [];
+      const mvoices: { [voiceID: number]: VF.Voice } = (measure as VexFlowMeasure).vfVoices;
+      const voices: VF.Voice[] = [];
       for (const voiceID in mvoices) {
         if (mvoices.hasOwnProperty(voiceID)) {
           voices.push(mvoices[voiceID]);
@@ -598,14 +599,14 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startNote: VexFlowGraphicalNote = (tie.StartNote as VexFlowGraphicalNote);
     const endNote: VexFlowGraphicalNote = (tie.EndNote as VexFlowGraphicalNote);
 
-    let vfStartNote: Vex.Flow.StemmableNote  = undefined;
+    let vfStartNote: VF.StemmableNote  = undefined;
     let startNoteIndexInTie: number = 0;
     if (startNote && startNote.vfnote && startNote.vfnote.length >= 2) {
       vfStartNote = startNote.vfnote[0];
       startNoteIndexInTie = startNote.vfnote[1];
     }
 
-    let vfEndNote: Vex.Flow.StemmableNote  = undefined;
+    let vfEndNote: VF.StemmableNote  = undefined;
     let endNoteIndexInTie: number = 0;
     if (endNote && endNote.vfnote && endNote.vfnote.length >= 2) {
       vfEndNote = endNote.vfnote[0];
@@ -615,21 +616,21 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     if (tieIsAtSystemBreak) {
       // split tie into two ties:
       if (vfStartNote) { // first_note or last_note must be not null in Vexflow
-        const vfTie1: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+        const vfTie1: VF.StaveTie = new VF.StaveTie({
           first_indices: [startNoteIndexInTie],
           first_note: vfStartNote
         });
         const measure1: VexFlowMeasure = (startNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        measure1.vfTies.push(vfTie1);
+        measure1.addStaveTie(vfTie1, tie);
       }
 
       if (vfEndNote) {
-        const vfTie2: Vex.Flow.StaveTie = new Vex.Flow.StaveTie({
+        const vfTie2: VF.StaveTie = new VF.StaveTie({
           last_indices: [endNoteIndexInTie],
           last_note: vfEndNote
         });
         const measure2: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        measure2.vfTies.push(vfTie2);
+        measure2.addStaveTie(vfTie2, tie);
       }
     } else {
       // normal case
@@ -644,7 +645,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
             if (startTieNote.FretNumber > endTieNote.FretNumber) {
               slideDirection = -1;
             }
-            vfTie = new Vex.Flow.TabSlide(
+            vfTie = new VF.TabSlide(
               {
                 first_indices: [startNoteIndexInTie],
                 first_note: vfStartNote,
@@ -654,7 +655,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
               slideDirection
             );
           } else {
-            vfTie = new Vex.Flow.TabTie(
+            vfTie = new VF.TabTie(
               {
                 first_indices: [startNoteIndexInTie],
                 first_note: vfStartNote,
@@ -666,21 +667,22 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
           }
 
         } else { // not Tab (guitar), normal StaveTie
-          vfTie = new Vex.Flow.StaveTie({
+          vfTie = new VF.StaveTie({
             first_indices: [startNoteIndexInTie],
             first_note: vfStartNote,
             last_indices: [endNoteIndexInTie],
             last_note: vfEndNote
           });
-          if (tie.Tie.TieDirection === PlacementEnum.Below) {
+          const tieDirection: PlacementEnum = tie.Tie.getTieDirection(startNote.sourceNote);
+          if (tieDirection === PlacementEnum.Below) {
             vfTie.setDirection(1); // + is down in vexflow
-          } else if (tie.Tie.TieDirection === PlacementEnum.Above) {
+          } else if (tieDirection === PlacementEnum.Above) {
             vfTie.setDirection(-1);
           }
         }
 
         const measure: VexFlowMeasure = (endNote.parentVoiceEntry.parentStaffEntry.parentMeasure as VexFlowMeasure);
-        measure.vfTies.push(vfTie);
+        measure.addStaveTie(vfTie, tie);
       }
     }
   }
@@ -697,14 +699,13 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const staffLine: StaffLine = measures[staffIndex].ParentStaffLine;
     const startMeasure: GraphicalMeasure = measures[staffIndex];
 
-    const startPosInStaffline: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
+    // start position in staffline:
+    const dynamicStartPosition: PointF2D = this.getRelativePositionInStaffLineFromTimestamp(
       absoluteTimestamp,
       staffIndex,
       staffLine,
       staffLine?.isPartOfMultiStaffInstrument());
-
-    const dynamicStartPosition: PointF2D = startPosInStaffline;
-    if (startPosInStaffline.x <= 0) {
+    if (dynamicStartPosition.x <= 0) {
       dynamicStartPosition.x = startMeasure.beginInstructionsWidth + this.rules.RhythmRightMargin;
     }
 
@@ -713,6 +714,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
         multiExpression.InstantaneousDynamic,
         staffLine,
         startMeasure);
+      // compare with multiExpression.InstantaneousDynamic.InMeasureTimestamp or add a relative timestamp? if we ever need a separate timestamp
       this.calculateGraphicalInstantaneousDynamicExpression(graphicalInstantaneousDynamic, dynamicStartPosition, absoluteTimestamp);
       this.dynamicExpressionMap.set(absoluteTimestamp.RealValue, graphicalInstantaneousDynamic.PositionAndShape);
     }
@@ -736,7 +738,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       } else if (graphicalContinuousDynamic.IsVerbal) {
         this.calculateGraphicalVerbalContinuousDynamic(graphicalContinuousDynamic, dynamicStartPosition);
       } else {
-        log.warn("This continuous dynamic is not covered");
+        log.warn("This continuous dynamic is not covered. measure" + multiExpression.SourceMeasureParent.MeasureNumber);
       }
     }
   }
@@ -746,8 +748,8 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const measureNumber: number = Math.max(metronomeExpression.ParentMultiTempoExpression.SourceMeasureParent.MeasureNumber - 1, 0);
     const staffNumber: number = Math.max(metronomeExpression.StaffNumber - 1, 0);
     const firstMetronomeMark: boolean = measureNumber === 0 && staffNumber === 0;
-    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
-    //vfStave.addModifier(new Vex.Flow.StaveTempo( // needs Vexflow PR
+    const vfStave: VF.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
+    //vfStave.addModifier(new VF.StaveTempo( // needs Vexflow PR
     let vexflowDuration: string = "q";
     if (metronomeExpression.beatUnit) {
       const duration: Fraction = NoteTypeHandler.getNoteDurationFromType(metronomeExpression.beatUnit);
@@ -773,7 +775,7 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
       // }
       // console.log('max skyline: ' + maxSkylineBeginning);
     }
-    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine.SkyLine;
+    const skyline: number[] = this.graphicalMusicSheet.MeasureList[0][0].ParentStaffLine?.SkyLine;
     vfStave.setTempo(
       {
           bpm: metronomeExpression.TempoInBpm,
@@ -787,8 +789,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     (<any>vfStave.getModifiers()[vfStave.getModifiers().length - 1]).setShiftX(
       xShift
     );
-    // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
-    skyline[0] = Math.min(skyline[0], -4.5 + yShift);
+    if (skyline) {
+      // TODO calculate bounding box of metronome mark instead of hacking skyline to fix lyricist collision
+      skyline[0] = Math.min(skyline[0], -4.5 + yShift);
+    }
     // somehow this is called repeatedly in Clementi, so skyline[0] = Math.min instead of -=
   }
 
@@ -800,13 +804,16 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const firstMeasureNumber: number = this.graphicalMusicSheet.MeasureList[0][0].MeasureNumber; // 0 for pickup, 1 otherwise
     const measureNumber: number = Math.max(measure.MeasureNumber - firstMeasureNumber, 0);
     const staffNumber: number = 0;
-    const vfStave: Vex.Flow.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure).getVFStave();
+    const vfStave: VF.Stave = (this.graphicalMusicSheet.MeasureList[measureNumber][staffNumber] as VexFlowMeasure)?.getVFStave();
+    if (!vfStave) { // potentially multi measure rest
+      return;
+    }
     const yOffset: number = -this.rules.RehearsalMarkYOffsetDefault - this.rules.RehearsalMarkYOffset;
     let xOffset: number = this.rules.RehearsalMarkXOffsetDefault + this.rules.RehearsalMarkXOffset;
     if (measure.IsSystemStartMeasure) {
       xOffset += this.rules.RehearsalMarkXOffsetSystemStartMeasure;
     }
-    // const section: Vex.Flow.StaveSection = new Vex.Flow.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
+    // const section: VF.StaveSection = new VF.StaveSection(rehearsalExpression.label, vfStave.getX(), yOffset);
     // (vfStave as any).modifiers.push(section);
     const fontSize: number = this.rules.RehearsalMarkFontSize;
     (vfStave as any).setSection(rehearsalExpression.label, yOffset, xOffset, fontSize); // fontSize is an extra argument from VexFlowPatch
@@ -1002,10 +1009,10 @@ export class VexFlowMusicSheetCalculator extends MusicSheetCalculator {
     const startX: number = startStaffEntry.PositionAndShape.AbsolutePosition.x - startXOffset;
     const stopX: number = endStaffEntry.PositionAndShape.AbsolutePosition.x + endXOffset;
     vfOctaveShift.PositionAndShape.Size.width = startX - stopX;
-    const textBracket: Vex.Flow.TextBracket = vfOctaveShift.getTextBracket();
+    const textBracket: VF.TextBracket = vfOctaveShift.getTextBracket();
     const fontSize: number = (textBracket as any).font.size / 10;
 
-    if ((<any>textBracket).position === Vex.Flow.TextBracket.Positions.TOP) {
+    if ((<any>textBracket).position === VF.TextBracket.Positions.TOP) {
       const headroom: number = Math.ceil(parentStaffline.SkyBottomLineCalculator.getSkyLineMinInRange(startX, stopX));
       if (headroom === Infinity) { // will cause Vexflow error
         return;
