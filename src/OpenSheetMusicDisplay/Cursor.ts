@@ -265,6 +265,11 @@ export class Cursor {
     this.update();
   }
 
+  public previous(): void {
+    this.iterator.moveToPreviousVisibleVoiceEntry(false);
+    this.update();
+  }
+
   /**
    * reset cursor to start
    */
