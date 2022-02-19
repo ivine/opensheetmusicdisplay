@@ -530,8 +530,8 @@ export class MusicPartManagerIterator {
         }
         // we reached the end
         this.currentVerticalContainerInMeasureTimestamp = new Fraction();
-        this.currentMeasure = undefined;
-        this.currentVoiceEntries = undefined;
+        // this.currentMeasure = undefined;
+        // this.currentVoiceEntries = undefined;
         this.endReached = true;
     }
 
