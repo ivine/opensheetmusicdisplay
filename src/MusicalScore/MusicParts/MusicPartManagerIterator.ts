@@ -240,6 +240,25 @@ export class MusicPartManagerIterator {
     //public currentPlaybackSettings(): PlaybackSettings {
     //    return this.manager.MusicSheet.SheetPlaybackSetting;
     //}
+    public moveToPrevious(): void {
+        this.forwardJumpOccurred = false;
+        if (this.frontReached) { return; }
+        if (this.currentVoiceEntries) {
+            this.currentVoiceEntries = [];
+        }
+        this.recursiveMove_previous();
+        if (!this.currentMeasure) {
+            this.currentTimeStamp = new Fraction(99999, 1);
+        }
+    }
+    public moveToPreviousVisibleVoiceEntry(notesOnly: boolean): void {
+
+        while (!this.frontReached) {
+            this.moveToPrevious();
+            if (this.checkEntries(notesOnly)) { return; }
+        }
+    }
+
     public moveToNext(): void {
         this.backJumpOccurred = false;
         if (this.endReached) { return; }
@@ -345,6 +364,61 @@ export class MusicPartManagerIterator {
                 }
             }
         }
+    }
+
+    /**
+     * 新的一节音符的开始
+     * TODO：未做过多修改，可能存在问题，需要进一步理解和阅读。
+     */
+    private handleRepetitionsAtMeasureStart(): void {
+        for (let idx: number = 0, len: number = this.currentMeasure.LastRepetitionInstructions.length; idx < len; ++idx) {
+            const repetitionInstruction: RepetitionInstruction = this.currentMeasure.LastRepetitionInstructions[idx];
+            const currentRepetition: Repetition = repetitionInstruction.parentRepetition;
+            if (!currentRepetition) { continue; }
+            if (currentRepetition.BackwardJumpInstructions.indexOf(repetitionInstruction) > -1) {
+                if (this.getRepetitionIterationCount(currentRepetition) < currentRepetition.UserNumberOfRepetitions) {
+                    this.doPreviousJump(currentRepetition);
+                    this.forwardJumpOccurred = true;
+                    return;
+                }
+            }
+            if (repetitionInstruction === currentRepetition.forwardJumpInstruction) {
+                if (
+                  this.JumpResponsibleRepetition !== undefined
+                  && currentRepetition !== this.JumpResponsibleRepetition
+                  && currentRepetition.StartIndex >= this.JumpResponsibleRepetition.StartIndex
+                  && currentRepetition.EndIndex <= this.JumpResponsibleRepetition.EndIndex
+                ) {
+                    this.resetRepetitionIterationCount(currentRepetition);
+                }
+
+                const forwardJumpTargetMeasureIndex: number = currentRepetition.getForwardJumpTargetForIteration(
+                  this.getRepetitionIterationCount(currentRepetition)
+                );
+                if (forwardJumpTargetMeasureIndex >= 0) {
+                    this.currentMeasureIndex = forwardJumpTargetMeasureIndex;
+                    this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
+                    this.currentVoiceEntryIndex = -1;
+                    this.jumpResponsibleRepetition = currentRepetition;
+                    this.forwardJumpOccurred = true;
+                    return;
+                }
+                // if (forwardJumpTargetMeasureIndex === -2) {
+                //     this.endReached = true;
+                // }
+            }
+        }
+        this.currentMeasureIndex--;
+        if (this.JumpResponsibleRepetition !== undefined && this.currentMeasureIndex < this.JumpResponsibleRepetition.StartIndex) {
+            this.jumpResponsibleRepetition = undefined;
+        }
+    }
+    private doPreviousJump(currentRepetition: Repetition): void {
+        this.currentMeasureIndex = currentRepetition.getBackwardJumpTarget();
+        this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
+        this.currentVoiceEntryIndex = -1;
+        this.incrementRepetitionIterationCount(currentRepetition);
+        this.jumpResponsibleRepetition = currentRepetition;
     }
 
     private handleRepetitionsAtMeasureEnd(): void {
@@ -533,6 +607,41 @@ export class MusicPartManagerIterator {
         // this.currentMeasure = undefined;
         // this.currentVoiceEntries = undefined;
         this.endReached = true;
+    }
+
+    private recursiveMove_previous(): void {
+        this.currentVoiceEntryIndex--;
+        if (this.currentVoiceEntryIndex === 0) {
+            this.handleRepetitionsAtMeasureBegin();
+            this.activateCurrentRhythmInstructions();
+        }
+
+        // 在一小节种滚动
+        if (this.currentVoiceEntryIndex >= 0 && this.currentVoiceEntryIndex < this.currentMeasure.VerticalSourceStaffEntryContainers.length) {
+            const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
+            this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
+            this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
+            this.currentTimeStamp = Fraction.minus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            this.activateCurrentDynamicOrTempoInstructions();
+            return;
+        }
+
+        // 小节音符滚动结束
+        this.currentEnrolledMeasureTimestamp.Sub(this.currentMeasure.Duration);
+        this.handleRepetitionsAtMeasureStart();
+        if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex < this.musicSheet.SourceMeasures.length) {
+            this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
+            this.currentTimeStamp = Fraction.minus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            this.currentVoiceEntryIndex = this.currentMeasure.VerticalSourceStaffEntryContainers.length;
+            this.recursiveMove_previous();
+            return;
+        }
+
+        // 已经到达曲谱的最前端
+        this.currentVerticalContainerInMeasureTimestamp = new Fraction();
+        // this.currentMeasure = undefined;
+        // this.currentVoiceEntries = undefined;
+        this.frontReached = true;
     }
 
     /**
