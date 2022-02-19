@@ -252,6 +252,14 @@ export class MusicPartManagerIterator {
         }
     }
     public moveToPreviousVisibleVoiceEntry(notesOnly: boolean): void {
+        if (this.currentMeasureIndex >= this.musicSheet.SourceMeasures.length) {
+            // 当前小节为负数，即用户在最后一小节的最后一个音符仍然 next move 时，重置状态。
+            const tmpIndex: number = this.musicSheet.SourceMeasures.length - 1;
+            const tmpCount: number = this.musicSheet.SourceMeasures[tmpIndex].VerticalSourceStaffEntryContainers.length;
+            this.currentVoiceEntryIndex = tmpCount - 1;
+            this.currentMeasureIndex = this.musicSheet.SourceMeasures.length - 1;
+            this.endReached = false;
+        }
 
         while (!this.frontReached) {
             this.moveToPrevious();
@@ -271,6 +279,12 @@ export class MusicPartManagerIterator {
         }
     }
     public moveToNextVisibleVoiceEntry(notesOnly: boolean): void {
+        if (this.currentMeasureIndex < 0) {
+            // 当前小节为负数，即用户在第一小节的第一个音符仍然 previous move 时，重置状态。
+            this.currentVoiceEntryIndex = 0;
+            this.currentMeasureIndex = 0;
+            this.frontReached = false;
+        }
         while (!this.endReached) {
             this.moveToNext();
             if (this.checkEntries(notesOnly)) { return; }
