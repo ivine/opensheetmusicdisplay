@@ -241,7 +241,7 @@ export class MusicPartManagerIterator {
     //    return this.manager.MusicSheet.SheetPlaybackSetting;
     //}
     public moveToNext(): void {
-        this.forwardJumpOccurred = this.backJumpOccurred = false;
+        this.backJumpOccurred = false;
         if (this.endReached) { return; }
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
