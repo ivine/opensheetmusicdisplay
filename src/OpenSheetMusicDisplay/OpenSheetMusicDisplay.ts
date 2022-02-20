@@ -23,7 +23,7 @@ import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartMa
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 
-import smoothscroll from "smoothscroll-polyfill";
+import smoothscroll from "smoothscroll-bl-polyfill";
 
 import { PointF2D } from "../Common";
 import { CustomSingleSelectOptions, GetSingleSelectStandardValue } from "../Custom/SelectOption";

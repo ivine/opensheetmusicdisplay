@@ -68,7 +68,7 @@
     "@types/vexflow": "^1.2.37",
     "jszip": "3.7.1",
     "loglevel": "^1.8.0",
-    "smoothscroll-polyfill": "^0.4.4",
+    "smoothscroll-bl-polyfill": "^0.4.6",
     "typescript-collections": "^1.3.3",
     "vexflow": "1.2.93"
   },
