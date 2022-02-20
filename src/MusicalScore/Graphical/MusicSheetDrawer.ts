@@ -591,6 +591,42 @@ export abstract class MusicSheetDrawer {
         return rectNode;
     }
 
+    public drawBoundingBoxWithOpacity(bbox: BoundingBox,
+        color: string = undefined, opacity: number = 0.5, drawCross: boolean = false, labelText: string = undefined, layer: number = 0
+    ): Node {
+        let tmpRect: RectangleF2D = new RectangleF2D(bbox.AbsolutePosition.x + bbox.BorderMarginLeft,
+            bbox.AbsolutePosition.y + bbox.BorderMarginTop,
+            bbox.BorderMarginRight - bbox.BorderMarginLeft,
+            bbox.BorderMarginBottom - bbox.BorderMarginTop);
+        if (drawCross) {
+            this.drawLineAsHorizontalRectangle(new GraphicalLine(
+                new PointF2D(bbox.AbsolutePosition.x - 1, bbox.AbsolutePosition.y),
+                new PointF2D(bbox.AbsolutePosition.x + 1, bbox.AbsolutePosition.y),
+                0.1,
+                OutlineAndFillStyleEnum.BaseWritingColor,
+                color),
+                layer - 1);
+
+            this.drawLineAsVerticalRectangle(new GraphicalLine(
+                new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y - 1),
+                new PointF2D(bbox.AbsolutePosition.x, bbox.AbsolutePosition.y + 1),
+                0.1,
+                OutlineAndFillStyleEnum.BaseWritingColor,
+                color),
+                layer - 1);
+        }
+
+        tmpRect = this.applyScreenTransformationForRect(tmpRect);
+        const rectNode: Node = this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, layer, color, opacity);
+        if (labelText) {
+            const label: Label = new Label(labelText);
+            this.renderLabel(new GraphicalLabel(label, 0.8, TextAlignmentEnum.CenterCenter, this.rules),
+                layer, tmpRect.width, tmpRect.height, tmpRect.height, new PointF2D(tmpRect.x, tmpRect.y + 12));
+            // theoretically we should return the nodes from renderLabel here as well, so they can also be removed later
+        }
+        return rectNode;
+    }
+
     private drawMarkedAreas(system: MusicSystem): void {
         for (const markedArea of system.GraphicalMarkedAreas) {
             if (markedArea) {
