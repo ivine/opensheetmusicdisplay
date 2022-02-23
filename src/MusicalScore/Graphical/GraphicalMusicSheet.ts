@@ -986,7 +986,7 @@ export class GraphicalMusicSheet {
         if (selected) {
             osmd.selectOptions.staffEntry = null;
         } else {
-            const color: string = selected ? "transparent" : "#32c47c50";
+            const color: string = selected ? "transparent" : "#EE927C80";
             const tmpNodes: Node[] = [];
             for (const tmp_entry of graphicalMesArray) {
                 const boundingbox: BoundingBox = tmp_entry.PositionAndShape;
