@@ -973,7 +973,7 @@ export class GraphicalMusicSheet {
 
     // 选择一段区间
     public SelectAnSectionStaffEntry(pos: PointF2D, osmd: OpenSheetMusicDisplay): void {
-        for (const node of osmd.singleSelectOptions.selectedNodeArray) {
+        for (const node of osmd.selectOptions.selectedNoteArray) {
             if (node && node.parentNode) {
                 node.parentNode.removeChild(node);
             }
@@ -982,11 +982,9 @@ export class GraphicalMusicSheet {
         const tmp_StaffEntry: GraphicalStaffEntry = this.GetNearestStaffEntry(pos);
         const graphicalMesArray: GraphicalMeasure[] = tmp_StaffEntry.parentMeasure.parentSourceMeasure.VerticalMeasureList;
 
-        console.log("tmp_StaffEntry --> ", tmp_StaffEntry);
-
-        const selected: boolean = osmd.singleSelectOptions.staffEntry === tmp_StaffEntry;
+        const selected: boolean = osmd.selectOptions.staffEntry === tmp_StaffEntry;
         if (selected) {
-            osmd.singleSelectOptions.staffEntry = null;
+            osmd.selectOptions.staffEntry = null;
         } else {
             const color: string = selected ? "transparent" : "#32c47c50";
             const tmpNodes: Node[] = [];
@@ -995,8 +993,8 @@ export class GraphicalMusicSheet {
                 const node: Node = this.drawer.drawBoundingBox(boundingbox, color);
                 tmpNodes.push(node);
             }
-            osmd.singleSelectOptions.staffEntry = tmp_StaffEntry;
-            osmd.singleSelectOptions.selectedNodeArray = tmpNodes;
+            osmd.selectOptions.staffEntry = tmp_StaffEntry;
+            osmd.selectOptions.selectedNoteArray = tmpNodes;
         }
     }
 

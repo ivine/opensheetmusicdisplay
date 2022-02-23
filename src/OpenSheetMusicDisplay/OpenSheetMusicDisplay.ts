@@ -26,7 +26,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
 import smoothscroll from "smoothscroll-bl-polyfill";
 
 import { PointF2D } from "../Common";
-import { CustomSingleSelectOptions, GetSingleSelectStandardValue } from "../Custom/SelectOption";
+import { CustomSelectMode, CustomSelectOptions, DOUBLE_CLICK_TIME_INTERVAL, GetSelectStandardValue } from "../Custom/SelectOption";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -76,7 +76,7 @@ export class OpenSheetMusicDisplay {
     public get cursor(): Cursor { // lowercase for backwards compatibility since cursor -> cursors change
         return this.cursors[0];
     }
-    public singleSelectOptions: CustomSingleSelectOptions = GetSingleSelectStandardValue();
+    public selectOptions: CustomSelectOptions = GetSelectStandardValue();
 
     public zoom: number = 1.0;
     protected zoomUpdated: boolean = false;
@@ -266,6 +266,8 @@ export class OpenSheetMusicDisplay {
         this.zoomUpdated = false;
         //console.log("[OSMD] render finished");
 
+        this.container.onselectstart = this.onSelectStartContianer.bind(this);
+        this.container.onmousedown = this.onMouseDownContianer.bind(this);
         this.container.onclick = this.onClickContainer.bind(this);
     }
 
@@ -646,17 +648,39 @@ export class OpenSheetMusicDisplay {
         this.rules.ColoringMode = options.coloringMode;
     }
 
+    onSelectStartContianer(): boolean {
+        return this.selectOptions.selectMode !== CustomSelectMode.ENABLE_DOUBLE_CLICK;
+    };
+    onMouseDownContianer(): boolean {
+        return this.selectOptions.selectMode !== CustomSelectMode.ENABLE_DOUBLE_CLICK;
+    }
     onClickContainer(e: PointerEvent): void {
-        if (!this.singleSelectOptions.selectMode) {
-            return;
+        if (this.selectOptions.selectMode === CustomSelectMode.SELECT_NOTES) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const tmp_sheetX: number = (e.pageX - this.container.offsetLeft) / 10;
+            const tmp_sheetY: number = (e.pageY - this.container.offsetTop) / 10;
+            const tmp_sheetLocation: PointF2D = new PointF2D(tmp_sheetX, tmp_sheetY);
+
+            this.graphic.SelectAnSectionStaffEntry(tmp_sheetLocation, this);
+        } else if (this.selectOptions.selectMode === CustomSelectMode.ENABLE_DOUBLE_CLICK) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (typeof this.selectOptions.clickTimestamp === "number") {
+                const offsetNum: number = Date.now() - this.selectOptions.clickTimestamp;
+                if (offsetNum > 0 && offsetNum <= DOUBLE_CLICK_TIME_INTERVAL) {
+                    if (typeof this.selectOptions.onDoubleClickBlankArea === "function") {
+                        this.selectOptions.onDoubleClickBlankArea();
+                    }
+                    this.selectOptions.clickTimestamp = 0;  // 识别出来后重置
+                    return;
+                }
+            }
         }
-        e.preventDefault();
 
-        const tmp_sheetX: number = (e.pageX - this.container.offsetLeft) / 10;
-        const tmp_sheetY: number = (e.pageY - this.container.offsetTop) / 10;
-        const tmp_sheetLocation: PointF2D = new PointF2D(tmp_sheetX, tmp_sheetY);
-
-        this.graphic.SelectAnSectionStaffEntry(tmp_sheetLocation, this);
+        this.selectOptions.clickTimestamp = Date.now();
     }
 
     /**
