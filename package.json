@@ -1,6 +1,6 @@
 {
-  "name": "opensheetmusicdisplay",
-  "version": "1.4.5",
+  "name": "@ivine/opensheetmusicdisplay",
+  "version": "0.1.0",
   "description": "An open source JavaScript engine for displaying MusicXML based on VexFlow.",
   "main": "build/opensheetmusicdisplay.min.js",
   "types": "build/dist/src/index.d.ts",
@@ -50,7 +50,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay"
+    "url": "https://github.com/ivine/opensheetmusicdisplay"
   },
   "keywords": [
     "sheet",
@@ -59,10 +59,8 @@
     "musicxml"
   ],
   "author": "PhonicScore",
+  "contributors": ["Dwwwwww"],
   "license": "BSD-3-Clause",
-  "bugs": {
-    "url": "https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/issues"
-  },
   "homepage": "http://opensheetmusicdisplay.org",
   "dependencies": {
     "@types/vexflow": "^1.2.37",
