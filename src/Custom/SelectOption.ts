@@ -8,7 +8,9 @@ export interface CustomSelectOptions {
   endNote?: number;
 
   clickTimestamp?: number;
-  onDoubleClickBlankArea?(): void;
+  onDoubleClickBlankArea?: Function;
+
+  didRenderNoteElement?: Function;
 }
 
 enum CustomSelectMode {
@@ -20,7 +22,11 @@ enum CustomSelectMode {
 const DOUBLE_CLICK_TIME_INTERVAL: number = 500;
 
 function GetSelectStandardValue(): CustomSelectOptions {
-  const value: CustomSelectOptions = { selectMode: CustomSelectMode.ENABLE_DOUBLE_CLICK, selectedNoteArray: [], clickTimestamp: 0 };
+  const value: CustomSelectOptions = {
+    selectMode: CustomSelectMode.ENABLE_DOUBLE_CLICK,
+    selectedNoteArray: [],
+    clickTimestamp: 0
+  };
   return value;
 };
 
