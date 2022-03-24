@@ -47,7 +47,8 @@ export class OpenSheetMusicDisplay {
      *                For defaults see the OSMDOptionsStandard method in the [[OSMDOptions]] class.
      */
     constructor(container: string | HTMLElement,
-                options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard()) {
+                options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard(),
+                selectOptions: CustomSelectOptions = GetSelectStandardValue()) {
 
         // safari support scroll smooth
         smoothscroll.polyfill();
@@ -69,6 +70,8 @@ export class OpenSheetMusicDisplay {
         }
         this.backendType = BackendType.SVG; // default, can be changed by options
         this.setOptions(options);
+
+        this.selectOptions = selectOptions;
     }
 
     private cursorsOptions: CursorOptions[] = [];
