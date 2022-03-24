@@ -10,6 +10,7 @@ import {OctaveEnum, OctaveShift} from "../../VoiceData/Expressions/ContinuousExp
 import { GraphicalVoiceEntry } from "../GraphicalVoiceEntry";
 import { KeyInstruction } from "../../VoiceData/Instructions/KeyInstruction";
 import { EngravingRules } from "../EngravingRules";
+import { OpenSheetMusicDisplay } from "../../../OpenSheetMusicDisplay";
 
 /**
  * The VexFlow version of a [[GraphicalNote]].
@@ -27,6 +28,23 @@ export class VexFlowGraphicalNote extends GraphicalNote {
             this.vfpitch = VexFlowConverter.pitch(drawPitch, note.isRest(), this.clef, this.sourceNote.Notehead);
             this.vfpitch[1] = undefined;
         }
+
+        setTimeout(() => {
+            const note_SVG: SVGGElement = this.getSVGGElement();
+            if (note_SVG !== null && typeof note_SVG !== "undefined") {
+                const didRenderKey: string = "MSDidRender";
+                const didRenderValue: string = "True";
+                if (note_SVG.getAttribute(didRenderKey) === didRenderValue) {
+                    return;
+                }
+                note_SVG.setAttribute(didRenderKey, didRenderValue);
+
+                const osmd: OpenSheetMusicDisplay = global.osmd;
+                if (typeof osmd.selectOptions.didRenderNoteElement === "function") {
+                    osmd.selectOptions.didRenderNoteElement(note_SVG);
+                }
+            }
+        });
     }
 
     public octaveShift: OctaveEnum;
