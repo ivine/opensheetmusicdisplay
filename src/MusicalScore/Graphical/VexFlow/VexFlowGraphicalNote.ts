@@ -32,16 +32,16 @@ export class VexFlowGraphicalNote extends GraphicalNote {
         setTimeout(() => {
             const note_SVG: SVGGElement = this.getSVGGElement();
             if (note_SVG !== null && typeof note_SVG !== "undefined") {
-                const didRenderKey: string = "MSDidRender";
+                const didRenderKey: string = "NoteSVGDidRender";
                 const didRenderValue: string = "True";
                 if (note_SVG.getAttribute(didRenderKey) === didRenderValue) {
                     return;
                 }
                 note_SVG.setAttribute(didRenderKey, didRenderValue);
-
                 const osmd: OpenSheetMusicDisplay = global.osmd;
-                if (typeof osmd.selectOptions.didRenderNoteElement === "function") {
-                    osmd.selectOptions.didRenderNoteElement(note_SVG);
+                if (osmd && typeof osmd.renderingOptions.didRenderNoteSVG === "function") {
+                    const tmpData: any = { element: note_SVG, parent: this };
+                    osmd.renderingOptions.didRenderNoteSVG(tmpData);
                 }
             }
         });

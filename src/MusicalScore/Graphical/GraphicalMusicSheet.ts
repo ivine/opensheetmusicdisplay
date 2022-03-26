@@ -26,7 +26,6 @@ import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
-import { OpenSheetMusicDisplay } from "../../OpenSheetMusicDisplay";
 // import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
 // import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
@@ -969,33 +968,6 @@ export class GraphicalMusicSheet {
             }
         }
         return followedInstrumentCount;
-    }
-
-    // 选择一段区间
-    public SelectAnSectionStaffEntry(pos: PointF2D, osmd: OpenSheetMusicDisplay): void {
-        for (const node of osmd.selectOptions.selectedNoteArray) {
-            if (node && node.parentNode) {
-                node.parentNode.removeChild(node);
-            }
-        }
-
-        const tmp_StaffEntry: GraphicalStaffEntry = this.GetNearestStaffEntry(pos);
-        const graphicalMesArray: GraphicalMeasure[] = tmp_StaffEntry.parentMeasure.parentSourceMeasure.VerticalMeasureList;
-
-        const selected: boolean = osmd.selectOptions.staffEntry === tmp_StaffEntry;
-        if (selected) {
-            osmd.selectOptions.staffEntry = null;
-        } else {
-            const color: string = selected ? "transparent" : "#EE927C80";
-            const tmpNodes: Node[] = [];
-            for (const tmp_entry of graphicalMesArray) {
-                const boundingbox: BoundingBox = tmp_entry.PositionAndShape;
-                const node: Node = this.drawer.drawBoundingBox(boundingbox, color);
-                tmpNodes.push(node);
-            }
-            osmd.selectOptions.staffEntry = tmp_StaffEntry;
-            osmd.selectOptions.selectedNoteArray = tmpNodes;
-        }
     }
 
     /*public GetGraphicalFromSourceMeasure(sourceMeasure: SourceMeasure): GraphicalMeasure[] {
