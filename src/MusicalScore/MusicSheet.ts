@@ -17,6 +17,7 @@ import {NoteState} from "./Graphical/DrawingEnums";
 import {Note} from "./VoiceData/Note";
 import {VoiceEntry} from "./VoiceData/VoiceEntry";
 import log from "loglevel";
+import { GetNoteCursorStandardValue, NoteCursorOptions } from "../Custom/NoteCursorOptions";
 
 // FIXME Andrea: Commented out some unnecessary/not-ported-yet code, have a look at (*)
 
@@ -44,6 +45,7 @@ export class MusicSheet /*implements ISettableMusicSheet, IComparable<MusicSheet
     }
     public static defaultTitle: string = "[no title given]";
 
+    public noteCursorOptions: NoteCursorOptions = GetNoteCursorStandardValue();
     public userStartTempoInBPM: number;
     public pageWidth: number;
 
