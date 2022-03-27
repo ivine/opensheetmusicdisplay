@@ -26,6 +26,8 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
 import smoothscroll from "smoothscroll-bl-polyfill";
 
 import { GetRenderingStandardValue, RenderingOptions } from "../Custom/RenderingOptions";
+import { GetNoteCursorStandardValue } from "../Custom/NoteCursorOptions";
+import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -648,6 +650,58 @@ export class OpenSheetMusicDisplay {
         this.rules.ColoringSetCurrent = coloringSetCurrent;
 
         this.rules.ColoringMode = options.coloringMode;
+    }
+
+    /**
+     * 设置光标的移动区间
+     */
+     public setCursorMoveRange(
+        startMeasureIndex: number, startNoteIndex: number,
+        endMeasureIndex: number, endNoteIndex: number
+    ): void {
+        if (
+            startMeasureIndex > endMeasureIndex ||
+            startMeasureIndex === endMeasureIndex && startNoteIndex >= endNoteIndex
+        ) {
+            console.log("光标区间范围设置不合理");
+            return;
+        }
+        console.log("光标区间范围设置");
+        this.sheet.noteCursorOptions.enableRange = true;
+        this.sheet.noteCursorOptions.startMeasureIndex = startMeasureIndex;
+        this.sheet.noteCursorOptions.startNoteIndex = startNoteIndex;
+        this.sheet.noteCursorOptions.endMeasureIndex = endMeasureIndex;
+        this.sheet.noteCursorOptions.endNoteIndex = endNoteIndex;
+
+        let steps: number = 0;
+        if (startMeasureIndex >= 0) {
+            let tmpMeasureIndex: number = startMeasureIndex;
+            while (tmpMeasureIndex >= 0) {
+                const tmpMeasure: SourceMeasure = this.sheet.SourceMeasures[tmpMeasureIndex];
+                if (tmpMeasureIndex === this.sheet.noteCursorOptions.startMeasureIndex) {
+                    steps += this.sheet.noteCursorOptions.startNoteIndex;
+                } else {
+                    steps += tmpMeasure.VerticalSourceStaffEntryContainers.length;
+                }
+                tmpMeasureIndex--;
+            }
+        }
+
+        const tmpCursorVisible: boolean = typeof this.cursor.hidden === "boolean" ? this.cursor.hidden : true;
+        this.cursor.hide();
+        this.cursor.reset();
+        while(steps > 0) {
+            this.cursor.iterator.moveToNext();
+            steps--;
+        }
+
+        if (!tmpCursorVisible) {
+            this.cursor.update();
+            this.cursor.show();
+        }
+    }
+    public disableCursorMoveRange(): void {
+        this.sheet.noteCursorOptions = GetNoteCursorStandardValue();
     }
 
     /**
