@@ -15,6 +15,7 @@ import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpressio
 import {AbstractExpression} from "../VoiceData/Expressions/AbstractExpression";
 import log from "loglevel";
 import { MusicSheet } from "../MusicSheet";
+import { NoteCursorOptions } from "../../Custom/NoteCursorOptions";
 
 export class MusicPartManagerIterator {
     constructor(musicSheet: MusicSheet, startTimestamp?: Fraction, endTimestamp?: Fraction) {
@@ -108,6 +109,9 @@ export class MusicPartManagerIterator {
     }
     public get CurrentVoiceEntries(): VoiceEntry[] {
         return this.currentVoiceEntries;
+    }
+    public get CurrentVoiceEntryIndex(): number {
+        return this.currentVoiceEntryIndex;
     }
     public get CurrentMeasureIndex(): number {
         return this.currentMeasureIndex;
@@ -246,7 +250,12 @@ export class MusicPartManagerIterator {
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
-        this.recursiveMove_previous();
+        if (this.musicSheet.noteCursorOptions.enableRange) {
+            // 光标区间
+            this.recursiveMove_previous_loopInRange();
+        } else {
+            this.recursiveMove_previous();
+        }
         if (!this.currentMeasure) {
             this.currentTimeStamp = new Fraction(99999, 1);
         }
@@ -273,7 +282,12 @@ export class MusicPartManagerIterator {
         if (this.currentVoiceEntries) {
             this.currentVoiceEntries = [];
         }
-        this.recursiveMove();
+        if (this.musicSheet.noteCursorOptions.enableRange) {
+            // 光标在区间内
+            this.recursiveMove_loopInRange();
+        } else {
+            this.recursiveMove();
+        }
         if (!this.currentMeasure) {
             this.currentTimeStamp = new Fraction(99999, 1);
         }
@@ -630,7 +644,7 @@ export class MusicPartManagerIterator {
             this.activateCurrentRhythmInstructions();
         }
 
-        // 在一小节种滚动
+        // 在一小节中移动
         if (this.currentVoiceEntryIndex >= 0 && this.currentVoiceEntryIndex < this.currentMeasure.VerticalSourceStaffEntryContainers.length) {
             const currentContainer: VerticalSourceStaffEntryContainer = this.currentMeasure.VerticalSourceStaffEntryContainers[this.currentVoiceEntryIndex];
             this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
@@ -640,7 +654,7 @@ export class MusicPartManagerIterator {
             return;
         }
 
-        // 小节音符滚动结束
+        // 一小节音符移动结束
         this.currentEnrolledMeasureTimestamp.Sub(this.currentMeasure.Duration);
         this.handleRepetitionsAtMeasureStart();
         if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex < this.musicSheet.SourceMeasures.length) {
@@ -656,6 +670,113 @@ export class MusicPartManagerIterator {
         // this.currentMeasure = undefined;
         // this.currentVoiceEntries = undefined;
         this.frontReached = true;
+    }
+
+    // 在范围内循环
+    private recursiveMove_loopInRange(): void {
+        const noteCursorOptions: NoteCursorOptions = this.musicSheet.noteCursorOptions;
+
+        this.frontReached = false;
+
+        this.currentVoiceEntryIndex++;
+        // TODO: 暂时不知道这两个的作用
+        if (this.currentVoiceEntryIndex === 0) {
+            this.handleRepetitionsAtMeasureBegin();
+            this.activateCurrentRhythmInstructions();
+        }
+
+        // 当前 Index 是否在小节内
+        let isInLoopMeasure: boolean = true;
+        if (this.currentMeasureIndex === noteCursorOptions.endMeasureIndex) {
+            isInLoopMeasure = this.currentVoiceEntryIndex <= noteCursorOptions.endNoteIndex;
+        } else if (this.currentMeasureIndex > noteCursorOptions.endMeasureIndex) {
+            isInLoopMeasure = false;
+        }
+
+        // 在小节内移动
+        const currentLoopMeasure: VerticalSourceStaffEntryContainer[] = this.currentMeasure.VerticalSourceStaffEntryContainers; // 当前小节的音符
+        if (this.currentVoiceEntryIndex >= 0 &&
+            this.currentVoiceEntryIndex < currentLoopMeasure.length &&
+            isInLoopMeasure) {
+            const currentContainer: VerticalSourceStaffEntryContainer = currentLoopMeasure[this.currentVoiceEntryIndex];
+            this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
+            this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            const selectionEnd: Fraction = this.musicSheet.SelectionEnd;
+            if (selectionEnd && this.currentTimeStamp.gte(selectionEnd)) {
+                this.endReached = true;
+            }
+            this.activateCurrentDynamicOrTempoInstructions();
+            return;
+        }
+
+        // 一节循环完成，增加小节下标
+        this.currentEnrolledMeasureTimestamp.Add(this.currentMeasure.Duration);
+        this.handleRepetitionsAtMeasureEnd();
+
+        if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex <= noteCursorOptions.endMeasureIndex) {
+            // 未超出全部小节范围，重置当前光标到第一个
+            this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
+            this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            this.currentVoiceEntryIndex = -1;
+            this.recursiveMove_loopInRange();
+            return;
+        }
+
+        // 到达最后
+        this.currentVerticalContainerInMeasureTimestamp = new Fraction();
+        this.endReached = true;
+        this.currentMeasureIndex = noteCursorOptions.endMeasureIndex;    // 回到 range 前的小节
+        this.currentVoiceEntryIndex = noteCursorOptions.endNoteIndex;    // 初始位置
+    }
+    private recursiveMove_previous_loopInRange(): void {
+        const noteCursorOptions: NoteCursorOptions = this.musicSheet.noteCursorOptions;
+
+        this.endReached = false;
+        this.currentVoiceEntryIndex--;
+        if (this.currentVoiceEntryIndex === 0) {
+            this.handleRepetitionsAtMeasureBegin();
+            this.activateCurrentRhythmInstructions();
+        }
+
+        // 当前 Index 是否在小节内
+        let isInLoopMeasure: boolean = true;
+        if (this.currentMeasureIndex === noteCursorOptions.startMeasureIndex) {
+            isInLoopMeasure = this.currentVoiceEntryIndex >= noteCursorOptions.startNoteIndex;
+        } else if (this.currentMeasureIndex < noteCursorOptions.startMeasureIndex) {
+            isInLoopMeasure = false;
+        }
+
+        // 在一小节中移动
+        const currentLoopMeasure: VerticalSourceStaffEntryContainer[] = this.currentMeasure.VerticalSourceStaffEntryContainers; // 当前小节的音符
+        if (this.currentVoiceEntryIndex >= 0 &&
+            this.currentVoiceEntryIndex < currentLoopMeasure.length &&
+            isInLoopMeasure) {
+            const currentContainer: VerticalSourceStaffEntryContainer = currentLoopMeasure[this.currentVoiceEntryIndex];
+            this.currentVoiceEntries = this.getVoiceEntries(currentContainer);
+            this.currentVerticalContainerInMeasureTimestamp = currentContainer.Timestamp;
+            this.currentTimeStamp = Fraction.minus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            this.activateCurrentDynamicOrTempoInstructions();
+            return;
+        }
+
+        // 一小节音符移动结束
+        this.currentEnrolledMeasureTimestamp.Sub(this.currentMeasure.Duration);
+        this.handleRepetitionsAtMeasureStart();
+
+        if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex >= noteCursorOptions.startMeasureIndex) {
+            this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
+            this.currentTimeStamp = Fraction.minus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
+            this.currentVoiceEntryIndex = this.currentMeasure.VerticalSourceStaffEntryContainers.length;
+            this.recursiveMove_previous_loopInRange();
+            return;
+        }
+
+        // 已经到达曲谱的最前端
+        this.currentVerticalContainerInMeasureTimestamp = new Fraction();
+        this.frontReached = true;
+        this.currentMeasureIndex = noteCursorOptions.startMeasureIndex;    // 回到 range 前的小节
+        this.currentVoiceEntryIndex = noteCursorOptions.startNoteIndex;    // 初始位置
     }
 
     /**
