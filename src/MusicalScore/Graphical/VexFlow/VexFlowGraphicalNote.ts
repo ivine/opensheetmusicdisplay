@@ -43,13 +43,6 @@ export class VexFlowGraphicalNote extends GraphicalNote {
                     const tmpData: any = { element: note_SVG, parent: parent };
                     osmd.renderingOptions.didRenderNoteSVG(tmpData);
                 }
-
-                note_SVG.addEventListener("click", (e) => {
-                    console.log("note_SVG ---> ", note_SVG);
-                    console.log("this ---> ", parent);
-                    console.log("asdfasdfasd");
-                    console.log("asdfasdfasd");
-                });
             }
         });
     }
