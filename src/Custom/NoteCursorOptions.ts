@@ -1,3 +1,5 @@
+import { SourceMeasure } from "../MusicalScore";
+import { Cursor } from "../OpenSheetMusicDisplay";
 
 export interface NoteCursorOptions {
   enableRange: Boolean; // 在区间内播放
@@ -20,3 +22,39 @@ export function GetNoteCursorStandardValue(): NoteCursorOptions {
   };
   return options;
 };
+
+export function GetCursorStartNoteStepsInSetRanges(
+  measureList: SourceMeasure[],
+  startMeasureIndex: number,
+  startNoteIndex: number,
+): number {
+  let steps: number = 0;
+  if (startMeasureIndex >= 0) {
+      let tmpMeasureIndex: number = startMeasureIndex;
+      while (tmpMeasureIndex >= 0) {
+          const tmpMeasure: SourceMeasure = measureList[tmpMeasureIndex];
+          if (tmpMeasureIndex === startMeasureIndex) {
+              steps += startNoteIndex;
+          } else {
+              steps += tmpMeasure.VerticalSourceStaffEntryContainers.length;
+          }
+          tmpMeasureIndex--;
+      }
+  }
+  return steps;
+}
+
+export function MoveCursorWithSteps(cursor: Cursor, steps: number): void {
+  const tmpCursorVisible: boolean = typeof cursor.hidden === "boolean" ? cursor.hidden : true;
+  cursor.hide();
+  cursor.reset();
+  while(steps > 0) {
+      cursor.iterator.moveToNext();
+      steps--;
+  }
+
+  if (!tmpCursorVisible) {
+    cursor.update();
+    cursor.show();
+  }
+}

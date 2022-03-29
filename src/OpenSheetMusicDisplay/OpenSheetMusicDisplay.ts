@@ -26,8 +26,7 @@ import { NoteEnum } from "../Common/DataObjects/Pitch";
 import smoothscroll from "smoothscroll-bl-polyfill";
 
 import { GetRenderingStandardValue, RenderingOptions } from "../Custom/RenderingOptions";
-import { GetNoteCursorStandardValue } from "../Custom/NoteCursorOptions";
-import { SourceMeasure } from "../MusicalScore/VoiceData/SourceMeasure";
+import { GetCursorStartNoteStepsInSetRanges, GetNoteCursorStandardValue, MoveCursorWithSteps } from "../Custom/NoteCursorOptions";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -673,32 +672,8 @@ export class OpenSheetMusicDisplay {
         this.sheet.noteCursorOptions.endMeasureIndex = endMeasureIndex;
         this.sheet.noteCursorOptions.endNoteIndex = endNoteIndex;
 
-        let steps: number = 0;
-        if (startMeasureIndex >= 0) {
-            let tmpMeasureIndex: number = startMeasureIndex;
-            while (tmpMeasureIndex >= 0) {
-                const tmpMeasure: SourceMeasure = this.sheet.SourceMeasures[tmpMeasureIndex];
-                if (tmpMeasureIndex === this.sheet.noteCursorOptions.startMeasureIndex) {
-                    steps += this.sheet.noteCursorOptions.startNoteIndex;
-                } else {
-                    steps += tmpMeasure.VerticalSourceStaffEntryContainers.length;
-                }
-                tmpMeasureIndex--;
-            }
-        }
-
-        const tmpCursorVisible: boolean = typeof this.cursor.hidden === "boolean" ? this.cursor.hidden : true;
-        this.cursor.hide();
-        this.cursor.reset();
-        while(steps > 0) {
-            this.cursor.iterator.moveToNext();
-            steps--;
-        }
-
-        if (!tmpCursorVisible) {
-            this.cursor.update();
-            this.cursor.show();
-        }
+        const steps: number = GetCursorStartNoteStepsInSetRanges(this.sheet.SourceMeasures, startMeasureIndex, startNoteIndex);
+        MoveCursorWithSteps(this.cursor, steps);
     }
     public disableCursorMoveRange(): void {
         this.sheet.noteCursorOptions = GetNoteCursorStandardValue();
