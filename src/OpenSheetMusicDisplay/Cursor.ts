@@ -16,7 +16,6 @@ import { VexFlowMeasure } from "../MusicalScore/Graphical/VexFlow/VexFlowMeasure
 import { CursorOptions } from "./OSMDOptions";
 import { BoundingBox } from "../MusicalScore/Graphical/BoundingBox";
 import { GraphicalNote } from "../MusicalScore/Graphical/GraphicalNote";
-import { GetCursorStartNoteStepsInSetRanges } from "../Custom/NoteCursorOptions";
 
 /**
  * A cursor which can iterate through the music sheet.
@@ -125,18 +124,6 @@ export class Cursor {
     }
 
     this.iterator = this.manager.getIterator();
-
-    if (this.openSheetMusicDisplay.Sheet.noteCursorOptions.enableRange) {
-      // 允许在范围内移动
-      const measureList: SourceMeasure[] = this.openSheetMusicDisplay.Sheet.SourceMeasures;
-      const startMeasureIndex_ranges: number = this.openSheetMusicDisplay.Sheet.noteCursorOptions.startMeasureIndex;
-      const startNoteIndex_ranges: number = this.openSheetMusicDisplay.Sheet.noteCursorOptions.startNoteIndex;
-      let steps: number = GetCursorStartNoteStepsInSetRanges(measureList, startMeasureIndex_ranges, startNoteIndex_ranges);
-      while(steps > 0) {
-        this.iterator.moveToNext();
-        steps--;
-    }
-    }
   }
 
   private getStaffEntryFromVoiceEntry(voiceEntry: VoiceEntry): VexFlowStaffEntry {
