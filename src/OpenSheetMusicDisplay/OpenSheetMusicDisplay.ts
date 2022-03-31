@@ -34,7 +34,7 @@ import { GetCursorStartNoteStepsInSetRanges, GetNoteCursorStandardValue, MoveCur
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "0.1.13"; // getter: this.Version
+    protected version: string = "0.1.20"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
