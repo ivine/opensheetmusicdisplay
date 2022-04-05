@@ -604,8 +604,7 @@ export class OpenSheetMusicDisplay {
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
         } else {
-            // eslint-disable-next-line max-len
-            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: true}, {type: 3, color: "#675f6d", alpha: 0.5, follow: true}];
+            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: true}];
         }
     }
 
@@ -810,7 +809,6 @@ export class OpenSheetMusicDisplay {
     public enableOrDisableCursors(enable: boolean): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
-            console.log('enableOrDisableCursors --> ', this.cursorsOptions);
             for (let i: number = 0; i < this.cursorsOptions.length; i++){
                 // save previous cursor state
                 const hidden: boolean = this.cursors[i]?.Hidden;

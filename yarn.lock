@@ -4874,11 +4874,6 @@ slash@^3.0.0:
   resolved "https://registry.npmjs.org/slash/-/slash-3.0.0.tgz"
   integrity sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==
 
-smoothscroll-bl-polyfill@^0.4.6:
-  version "0.4.6"
-  resolved "https://registry.yarnpkg.com/smoothscroll-bl-polyfill/-/smoothscroll-bl-polyfill-0.4.6.tgz#1bffb495132a7e5af54f4ce3e21de96966045382"
-  integrity sha512-jRRzTNXHC1wWmRlO9ZWwdGUOuTNuMHnN2IlhV1ljhWT7D/iS0W9ynzaH12NQx93OtN+PM2CbExviQw4qvRZjtg==
-
 socket.io-adapter@~2.3.3:
   version "2.3.3"
   resolved "https://registry.npmjs.org/socket.io-adapter/-/socket.io-adapter-2.3.3.tgz"
