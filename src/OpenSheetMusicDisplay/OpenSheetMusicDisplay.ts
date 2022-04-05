@@ -23,8 +23,6 @@ import { MusicPartManagerIterator } from "../MusicalScore/MusicParts/MusicPartMa
 import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalculator";
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 
-import smoothscroll from "smoothscroll-bl-polyfill";
-
 import { GetRenderingStandardValue, RenderingOptions } from "../Custom/RenderingOptions";
 import { GetCursorStartNoteStepsInSetRanges, GetNoteCursorStandardValue, MoveCursorWithSteps } from "../Custom/NoteCursorOptions";
 
@@ -34,7 +32,7 @@ import { GetCursorStartNoteStepsInSetRanges, GetNoteCursorStandardValue, MoveCur
  * After the constructor, use load() and render() to load and render a MusicXML file.
  */
 export class OpenSheetMusicDisplay {
-    protected version: string = "0.1.20"; // getter: this.Version
+    protected version: string = "0.1.22"; // getter: this.Version
     // at release, bump version and change to -release, afterwards to -dev again
 
     /**
@@ -49,9 +47,6 @@ export class OpenSheetMusicDisplay {
     constructor(container: string | HTMLElement,
                 options: IOSMDOptions = OSMDOptions.OSMDOptionsStandard(),
                 renderingOptions: RenderingOptions = GetRenderingStandardValue()) {
-
-        // safari support scroll smooth
-        smoothscroll.polyfill();
 
         // Store container element
         if (typeof container === "string") {
@@ -609,7 +604,8 @@ export class OpenSheetMusicDisplay {
         if (options.cursorsOptions !== undefined) {
             this.cursorsOptions = options.cursorsOptions;
         } else {
-            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: true}];
+            // eslint-disable-next-line max-len
+            this.cursorsOptions = [{type: 0, color: this.EngravingRules.DefaultColorCursor, alpha: 0.5, follow: true}, {type: 3, color: "#675f6d", alpha: 0.5, follow: true}];
         }
     }
 
@@ -814,6 +810,7 @@ export class OpenSheetMusicDisplay {
     public enableOrDisableCursors(enable: boolean): void {
         this.drawingParameters.drawCursors = enable;
         if (enable) {
+            console.log('enableOrDisableCursors --> ', this.cursorsOptions);
             for (let i: number = 0; i < this.cursorsOptions.length; i++){
                 // save previous cursor state
                 const hidden: boolean = this.cursors[i]?.Hidden;

@@ -470,7 +470,8 @@ import { TransposeCalculator } from '../src/Plugins/Transpose/TransposeCalculato
             },
             pageFormat: pageFormat,
             pageBackgroundColor: pageBackgroundColor,
-            renderSingleHorizontalStaffline: singleHorizontalStaffline
+            renderSingleHorizontalStaffline: singleHorizontalStaffline,
+            cursorOptions: [{type: 3, color: '#675f6d', alpha: 0.5, follow: true}],
 
             // tupletsBracketed: true, // creates brackets for all tuplets except triplets, even when not set by xml
             // tripletsBracketed: true,
