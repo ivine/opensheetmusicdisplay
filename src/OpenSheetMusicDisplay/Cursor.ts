@@ -81,7 +81,7 @@ export class Cursor {
   private graphic: GraphicalMusicSheet;
   public hidden: boolean = true;
   public currentPageNumber: number = 1;
-  private cursorOptions: CursorOptions;
+  public cursorOptions: CursorOptions;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
