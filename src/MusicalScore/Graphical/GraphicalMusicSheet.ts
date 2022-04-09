@@ -572,8 +572,14 @@ export class GraphicalMusicSheet {
                                                                         object.parentStaffEntry?.relInMeasureTimestamp !== undefined);
     }
 
-    public GetNearestNote(clickPosition: PointF2D, maxClickDist: PointF2D): GraphicalNote {
-        const nearestVoiceEntry: GraphicalVoiceEntry = this.GetNearestVoiceEntry(clickPosition);
+    public GetNearestNote(clickPosition: PointF2D, startSearchArea: number = 5, maxSearchArea: number = 20, searchAreaIncrement: number = 5): GraphicalNote {
+        const nearestVoiceEntry: GraphicalVoiceEntry = this.GetNearestGraphicalObject(
+            clickPosition,
+            GraphicalVoiceEntry.name,
+            startSearchArea,
+            maxSearchArea,
+            searchAreaIncrement
+        );
         if (!nearestVoiceEntry) {
             return undefined;
         }
