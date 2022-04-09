@@ -555,7 +555,11 @@ export abstract class MusicSheetDrawer {
         startBox.ChildElements.forEach(bb => this.drawBoundingBoxes(bb, layer, type));
     }
 
-    public drawBoundingBoxWithRect(rect: RectangleF2D, fill: string, alpha: number = 1): Node {
+    public drawBoundingBoxWithRect(
+        rect: RectangleF2D,
+        fill: string,
+        alpha: number = 1
+    ): Node {
         const tmpRect: RectangleF2D = this.applyScreenTransformationForRect(rect);
         const rectNode: Node = this.renderRectangle(tmpRect, <number>GraphicalLayers.Background, 0, fill, alpha);
         return rectNode;
