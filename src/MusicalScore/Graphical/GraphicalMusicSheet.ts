@@ -26,6 +26,8 @@ import {OutlineAndFillStyleEnum} from "./DrawingEnums";
 import { MusicSheetDrawer } from "./MusicSheetDrawer";
 import { GraphicalVoiceEntry } from "./GraphicalVoiceEntry";
 import { GraphicalObject } from "./GraphicalObject";
+import { VerticalSourceStaffEntryContainer } from "../VoiceData/VerticalSourceStaffEntryContainer";
+import { GetCursorStartNoteStepsInSetRanges } from "../../Custom/NoteCursorOptions";
 // import { VexFlowMusicSheetDrawer } from "./VexFlow/VexFlowMusicSheetDrawer";
 // import { SvgVexFlowBackend } from "./VexFlow/SvgVexFlowBackend"; // causes build problem with npm start
 
@@ -654,6 +656,92 @@ export class GraphicalMusicSheet {
             }
         }
         return undefined;
+    }
+
+    public GetNearestVerticalSourceStaffEntryContainer(clickPosition: PointF2D, searchAreaOffset: number = 1): VerticalSourceStaffEntryContainer {
+        console.log("GetNearestVerticalSourceStaffEntryContainer, clickPosition --> ", clickPosition);
+        const region: BoundingBox = new BoundingBox(undefined);
+        region.BorderLeft = clickPosition.x - searchAreaOffset;
+        region.BorderTop = clickPosition.y - searchAreaOffset;
+        region.BorderRight = clickPosition.x + searchAreaOffset;
+        region.BorderBottom = clickPosition.y + searchAreaOffset;
+        region.AbsolutePosition = new PointF2D(clickPosition.x, clickPosition.y);
+
+        // 目标音符容器
+        let targetStaffEntry: VerticalSourceStaffEntryContainer = null;
+
+        // 找到点位所在的小节
+        const measureList: SourceMeasure[] = this.musicSheet.SourceMeasures;
+        let targetMeasure: SourceMeasure = null;
+        let lowerIndex: number = 0;
+        let upperIndex: number = measureList.length;
+        while (lowerIndex < upperIndex) {
+            const middleIndex: number = Math.floor(lowerIndex + (upperIndex - lowerIndex) / 2);
+            const measure: SourceMeasure = measureList[middleIndex];
+
+            const topGraphicalMeasure: GraphicalMeasure = measure.VerticalMeasureList[0];
+            const bottomGraphicalMeasure: GraphicalMeasure = measure.VerticalMeasureList[measure.VerticalMeasureList.length - 1];
+
+            if (region.BorderTop > bottomGraphicalMeasure.PositionAndShape.AbsolutePosition.y) {
+                // 向后
+                lowerIndex = middleIndex + 1;
+            } else if (region.BorderBottom < topGraphicalMeasure.PositionAndShape.AbsolutePosition.y) {
+                // 向前
+                upperIndex = middleIndex;
+            } else {
+                // 在该小节内
+                targetMeasure = measure;
+                break;
+            }
+        }
+
+        // 找到了目标小节
+        if (targetMeasure !== null) {
+            const measureIndex: number = targetMeasure.measureListIndex;
+            // 开始找对应的垂直音符容器
+            const entries: VerticalSourceStaffEntryContainer[] = targetMeasure.VerticalSourceStaffEntryContainers;
+            lowerIndex = 0;
+            upperIndex = entries.length;
+            while (lowerIndex < upperIndex) {
+                const middleIndex: number = Math.floor(lowerIndex + (upperIndex - lowerIndex) / 2);
+                const entry: VerticalSourceStaffEntryContainer = entries[middleIndex - 1];
+
+                const noteIndex: number = GetCursorStartNoteStepsInSetRanges(measureList, measureIndex, middleIndex - 1);
+                const graphicalStaffEntry: VerticalGraphicalStaffEntryContainer = this.getStaffEntry(noteIndex).parentVerticalContainer;
+                let x_left: number = -1;
+                let x_right: number = -1;
+                for (const noteItem of graphicalStaffEntry.StaffEntries) {
+                    if (!noteItem) {
+                        continue;
+                    }
+                    const left: number = noteItem.PositionAndShape.AbsolutePosition.x + noteItem.PositionAndShape.BorderMarginLeft;
+                    const right: number =
+                        noteItem.PositionAndShape.AbsolutePosition.x +
+                        noteItem.PositionAndShape.Size.width +
+                        noteItem.PositionAndShape.BorderMarginRight;
+                    if (x_left === -1 && x_right === -1)  {
+                        x_left = left;
+                        x_right = right;
+                    } else {
+                        x_left = Math.min(x_left, left);
+                        x_right = Math.max(x_right, right);
+                    }
+                }
+                if (region.BorderLeft > x_right) {
+                    // 向后
+                    lowerIndex = middleIndex + 1;
+                } else if (region.BorderRight < x_left) {
+                    // 向前
+                    upperIndex = middleIndex;
+                } else {
+                    targetStaffEntry = entry;
+                    break;
+                }
+            }
+        } else {
+            targetStaffEntry = null;
+        }
+        return targetStaffEntry;
     }
 
     public GetNearestStaffEntry(clickPosition: PointF2D): GraphicalStaffEntry {
