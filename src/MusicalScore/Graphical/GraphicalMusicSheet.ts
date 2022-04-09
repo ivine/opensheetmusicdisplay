@@ -658,7 +658,7 @@ export class GraphicalMusicSheet {
         return undefined;
     }
 
-    public GetNearestVerticalSourceStaffEntryContainer(clickPosition: PointF2D, searchAreaOffset: number = 1): VerticalSourceStaffEntryContainer {
+    public GetNearestVerticalSourceStaffEntryContainer(clickPosition: PointF2D, searchAreaOffset: number = 1): VerticalGraphicalStaffEntryContainer {
         console.log("GetNearestVerticalSourceStaffEntryContainer, clickPosition --> ", clickPosition);
         const region: BoundingBox = new BoundingBox(undefined);
         region.BorderLeft = clickPosition.x - searchAreaOffset;
@@ -668,7 +668,7 @@ export class GraphicalMusicSheet {
         region.AbsolutePosition = new PointF2D(clickPosition.x, clickPosition.y);
 
         // 目标音符容器
-        let targetStaffEntry: VerticalSourceStaffEntryContainer = null;
+        let targetStaffEntry: VerticalGraphicalStaffEntryContainer = null;
 
         // 找到点位所在的小节
         const measureList: SourceMeasure[] = this.musicSheet.SourceMeasures;
@@ -734,7 +734,7 @@ export class GraphicalMusicSheet {
                     // 向前
                     upperIndex = middleIndex;
                 } else {
-                    targetStaffEntry = entry;
+                    targetStaffEntry = graphicalStaffEntry;
                     break;
                 }
             }
