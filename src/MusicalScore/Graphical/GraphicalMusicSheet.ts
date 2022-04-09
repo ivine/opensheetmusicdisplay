@@ -704,7 +704,6 @@ export class GraphicalMusicSheet {
             upperIndex = entries.length;
             while (lowerIndex < upperIndex) {
                 const middleIndex: number = Math.floor(lowerIndex + (upperIndex - lowerIndex) / 2);
-                const entry: VerticalSourceStaffEntryContainer = entries[middleIndex - 1];
 
                 const noteIndex: number = GetCursorStartNoteStepsInSetRanges(measureList, measureIndex, middleIndex - 1);
                 const graphicalStaffEntry: VerticalGraphicalStaffEntryContainer = this.getStaffEntry(noteIndex).parentVerticalContainer;
