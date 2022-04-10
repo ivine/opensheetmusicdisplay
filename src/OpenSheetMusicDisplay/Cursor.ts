@@ -56,8 +56,8 @@ export class Cursor {
     this.scrollToView_throttle = _.throttle(function(behavior: string, block: string) {
       this.cursorElement.scrollIntoView({ behavior: behavior, block: block });
     }, this.scrollThrottleDelay, {
-      leading: false,
-      trailing: true
+      leading: true,
+      trailing: false,
     });
   }
 
