@@ -1,3 +1,4 @@
+import _ from "loadsh";
 import {MusicPartManagerIterator} from "../MusicalScore/MusicParts/MusicPartManagerIterator";
 import {MusicPartManager} from "../MusicalScore/MusicParts/MusicPartManager";
 import {VoiceEntry} from "../MusicalScore/VoiceData/VoiceEntry";
@@ -51,6 +52,13 @@ export class Cursor {
 
     this.cursorElement = <HTMLImageElement>curs;
     this.container.appendChild(curs);
+
+    this.scrollToView_throttle = _.throttle(function(behavior: string, block: string) {
+      this.cursorElement.scrollIntoView({ behavior: behavior, block: block });
+    }, this.scrollThrottleDelay, {
+      leading: false,
+      trailing: true
+    });
   }
 
   public adjustToBackgroundColor(): void {
@@ -82,6 +90,10 @@ export class Cursor {
   public hidden: boolean = true;
   public currentPageNumber: number = 1;
   public cursorOptions: CursorOptions;
+
+  public enableScrollThrottle: boolean = true;
+  public scrollThrottleDelay: number = 500;
+  private scrollToView_throttle: Function;
 
   /** Initialize the cursor. Necessary before using functions like show() and next(). */
   public init(manager: MusicPartManager, graphic: GraphicalMusicSheet): void {
@@ -189,11 +201,24 @@ export class Cursor {
     this.updateWidthAndStyle(measurePositionAndShape, x, y, height);
 
     if (this.openSheetMusicDisplay.FollowCursor && this.cursorOptions.follow) {
+      let behavior: ScrollBehavior = "smooth";
+      const block: ScrollLogicalPosition = "center";
+
       if (!this.openSheetMusicDisplay.EngravingRules.RenderSingleHorizontalStaffline) {
         const diff: number = this.cursorElement.getBoundingClientRect().top;
-        this.cursorElement.scrollIntoView({behavior: diff < 1000 ? "smooth" : "auto", block: "center"});
+
+        behavior = diff < 1000 ? "smooth" : "auto";
+        if (this.enableScrollThrottle) {
+          this.scrollToView_throttle(behavior, block);
+        } else {
+          this.cursorElement.scrollIntoView({behavior: behavior, block: block});
+        }
       } else {
-        this.cursorElement.scrollIntoView({behavior: "smooth", inline: "center"});
+        if (this.enableScrollThrottle) {
+          this.scrollToView_throttle(behavior, block);
+        } else {
+          this.cursorElement.scrollIntoView({behavior: behavior, block: block});
+        }
       }
     }
     // Show cursor
