@@ -15,7 +15,7 @@ import {MultiTempoExpression} from "../VoiceData/Expressions/MultiTempoExpressio
 import {AbstractExpression} from "../VoiceData/Expressions/AbstractExpression";
 import log from "loglevel";
 import { MusicSheet } from "../MusicSheet";
-import { NoteCursorOptions } from "../../Custom/NoteCursorOptions";
+import { GetNoteInOneScoreInfo, NoteCursorOptions } from "../../Custom/NoteCursorOptions";
 
 export class MusicPartManagerIterator {
     constructor(musicSheet: MusicSheet, startTimestamp?: Fraction, endTimestamp?: Fraction) {
@@ -685,11 +685,15 @@ export class MusicPartManagerIterator {
             this.activateCurrentRhythmInstructions();
         }
 
+        // 获取参数
+        const data: any = GetNoteInOneScoreInfo(this.musicSheet.SourceMeasures, noteCursorOptions.endNoteIndex);
+        const selectedMeasureIndex: number = data.measureIndex;
+        const selectedNoteIndex: number = data.noteIndex;
         // 当前 Index 是否在小节内
         let isInLoopMeasure: boolean = true;
-        if (this.currentMeasureIndex === noteCursorOptions.endMeasureIndex) {
-            isInLoopMeasure = this.currentVoiceEntryIndex <= noteCursorOptions.endNoteIndex;
-        } else if (this.currentMeasureIndex > noteCursorOptions.endMeasureIndex) {
+        if (this.currentMeasureIndex === selectedMeasureIndex) {
+            isInLoopMeasure = this.currentVoiceEntryIndex <= selectedNoteIndex;
+        } else if (this.currentMeasureIndex > selectedMeasureIndex) {
             isInLoopMeasure = false;
         }
 
@@ -714,7 +718,7 @@ export class MusicPartManagerIterator {
         this.currentEnrolledMeasureTimestamp.Add(this.currentMeasure.Duration);
         this.handleRepetitionsAtMeasureEnd();
 
-        if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex <= noteCursorOptions.endMeasureIndex) {
+        if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex <= selectedMeasureIndex) {
             // 未超出全部小节范围，重置当前光标到第一个
             this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
             this.currentTimeStamp = Fraction.plus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
@@ -726,8 +730,8 @@ export class MusicPartManagerIterator {
         // 到达最后
         this.currentVerticalContainerInMeasureTimestamp = new Fraction();
         this.endReached = true;
-        this.currentMeasureIndex = noteCursorOptions.endMeasureIndex;    // 回到 range 前的小节
-        this.currentVoiceEntryIndex = noteCursorOptions.endNoteIndex;    // 初始位置
+        this.currentMeasureIndex = selectedMeasureIndex;    // 回到 range 前的小节
+        this.currentVoiceEntryIndex = selectedNoteIndex;    // 初始位置
     }
     private recursiveMove_previous_loopInRange(): void {
         const noteCursorOptions: NoteCursorOptions = this.musicSheet.noteCursorOptions;
@@ -739,11 +743,16 @@ export class MusicPartManagerIterator {
             this.activateCurrentRhythmInstructions();
         }
 
+        // 获取参数
+        const data: any = GetNoteInOneScoreInfo(this.musicSheet.SourceMeasures, noteCursorOptions.startNoteIndex);
+        const selectedMeasureIndex: number = data.measureIndex;
+        const selectedNoteIndex: number = data.noteIndex;
+
         // 当前 Index 是否在小节内
         let isInLoopMeasure: boolean = true;
-        if (this.currentMeasureIndex === noteCursorOptions.startMeasureIndex) {
-            isInLoopMeasure = this.currentVoiceEntryIndex >= noteCursorOptions.startNoteIndex;
-        } else if (this.currentMeasureIndex < noteCursorOptions.startMeasureIndex) {
+        if (this.currentMeasureIndex === selectedMeasureIndex) {
+            isInLoopMeasure = this.currentVoiceEntryIndex >= selectedNoteIndex;
+        } else if (this.currentMeasureIndex < selectedMeasureIndex) {
             isInLoopMeasure = false;
         }
 
@@ -764,7 +773,7 @@ export class MusicPartManagerIterator {
         this.currentEnrolledMeasureTimestamp.Sub(this.currentMeasure.Duration);
         this.handleRepetitionsAtMeasureStart();
 
-        if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex >= noteCursorOptions.startMeasureIndex) {
+        if (this.currentMeasureIndex >= 0 && this.currentMeasureIndex >= selectedMeasureIndex) {
             this.currentMeasure = this.musicSheet.SourceMeasures[this.currentMeasureIndex];
             this.currentTimeStamp = Fraction.minus(this.currentMeasure.AbsoluteTimestamp, this.currentVerticalContainerInMeasureTimestamp);
             this.currentVoiceEntryIndex = this.currentMeasure.VerticalSourceStaffEntryContainers.length;
@@ -775,8 +784,8 @@ export class MusicPartManagerIterator {
         // 已经到达曲谱的最前端
         this.currentVerticalContainerInMeasureTimestamp = new Fraction();
         this.frontReached = true;
-        this.currentMeasureIndex = noteCursorOptions.startMeasureIndex;    // 回到 range 前的小节
-        this.currentVoiceEntryIndex = noteCursorOptions.startNoteIndex;    // 初始位置
+        this.currentMeasureIndex = selectedMeasureIndex;    // 回到 range 前的小节
+        this.currentVoiceEntryIndex = selectedNoteIndex;    // 初始位置
     }
 
     /**

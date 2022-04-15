@@ -24,7 +24,7 @@ import { ITransposeCalculator } from "../MusicalScore/Interfaces/ITransposeCalcu
 import { NoteEnum } from "../Common/DataObjects/Pitch";
 
 import { GetRenderingStandardValue, RenderingOptions } from "../Custom/RenderingOptions";
-import { GetCursorStartNoteStepsInSetRanges, GetNoteCursorStandardValue, MoveCursorWithSteps } from "../Custom/NoteCursorOptions";
+import { GetNoteCursorStandardValue, MoveCursorIntoNote } from "../Custom/NoteCursorOptions";
 
 /**
  * The main class and control point of OpenSheetMusicDisplay.<br>
@@ -649,26 +649,17 @@ export class OpenSheetMusicDisplay {
     /**
      * 设置光标的移动区间
      */
-     public setCursorMoveRange(
-        startMeasureIndex: number, startNoteIndex: number,
-        endMeasureIndex: number, endNoteIndex: number
-    ): void {
-        if (
-            startMeasureIndex > endMeasureIndex ||
-            startMeasureIndex === endMeasureIndex && startNoteIndex >= endNoteIndex
-        ) {
+     public setCursorMoveRange(startNoteIndex: number, endNoteIndex: number): void {
+        if (startNoteIndex >= endNoteIndex) {
             console.log("光标区间范围设置不合理");
             return;
         }
-        console.log("光标区间范围设置");
+        console.log("光标区间范围设置 startNoteIndex --> ", startNoteIndex, ", endNoteIndex --> ", endNoteIndex);
         this.sheet.noteCursorOptions.enableRange = true;
-        this.sheet.noteCursorOptions.startMeasureIndex = startMeasureIndex;
         this.sheet.noteCursorOptions.startNoteIndex = startNoteIndex;
-        this.sheet.noteCursorOptions.endMeasureIndex = endMeasureIndex;
         this.sheet.noteCursorOptions.endNoteIndex = endNoteIndex;
 
-        const steps: number = GetCursorStartNoteStepsInSetRanges(this.sheet.SourceMeasures, startMeasureIndex, startNoteIndex);
-        MoveCursorWithSteps(this.cursor, steps);
+        MoveCursorIntoNote(this.cursor, startNoteIndex);
     }
     public disableCursorMoveRange(): void {
         this.sheet.noteCursorOptions = GetNoteCursorStandardValue();
