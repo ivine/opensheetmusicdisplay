@@ -32,18 +32,6 @@ export function MoveCursorIntoNote(cursor: Cursor, noteIndex: number): void {
   }
 }
 
-// noteIndex: 在小节中的下标
-export function GetNoteIndexInScore(measureList: SourceMeasure[], measureIndex: number, noteIndex: number): number {
-  let noteIndexInScore: number = 0;
-  let tmpCursorMeasureIndex: number = measureIndex;
-  while (tmpCursorMeasureIndex > measureList.length) {
-    tmpCursorMeasureIndex++;
-    noteIndexInScore += measureList[tmpCursorMeasureIndex].VerticalSourceStaffEntryContainers.length;
-  }
-  noteIndexInScore += noteIndex;
-  return noteIndexInScore;
-}
-
 // 获取音符下标在一小节中的信息
 export function GetNoteInOneScoreInfo(measureList: SourceMeasure[], noteIndexInScore: number): {measureIndex: number, noteIndex: number} {
   let measureIndex: number = 0;
