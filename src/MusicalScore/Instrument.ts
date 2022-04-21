@@ -31,6 +31,8 @@ export class Instrument extends InstrumentalGroup {
     private hasChordSymbols: boolean = false;
     private playbackTranspose: number;
 
+    private midiProgram: number;
+
     private lyricVersesNumbers: number[] = [];
     private subInstruments: SubInstrument[] = [];
     private partAbbreviation: string;
@@ -94,6 +96,13 @@ export class Instrument extends InstrumentalGroup {
     }
     public set PlaybackTranspose(value: number) {
         this.playbackTranspose = value;
+    }
+
+    public get MidiProgram(): number {
+        return this.midiProgram;
+    }
+    public set MidiProgram(value: number) {
+        this.midiProgram = value;
     }
 
     public get SubInstruments(): SubInstrument[] {

@@ -776,6 +776,7 @@ export class MusicSheetReader /*implements IMusicSheetReader*/ {
                                             if (instrument.SubInstruments.length > 0 && instrument.MidiInstrumentId !== MidiInstrument.Percussion) {
                                                 subInstrument.midiInstrumentID = <MidiInstrument>Math.max(0, parseInt(instrumentElement.value, 10) - 1);
                                             }
+                                            instrument.MidiProgram = parseInt(instrumentElement.value, 10);
                                         } else if (instrumentElement.name === "midi-unpitched") {
                                             subInstrument.fixedKey = Math.max(0, parseInt(instrumentElement.value, 10));
                                         } else if (instrumentElement.name === "volume") {
